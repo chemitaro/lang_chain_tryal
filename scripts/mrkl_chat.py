@@ -1,16 +1,18 @@
 from langchain import OpenAI, LLMMathChain, SerpAPIWrapper, WikipediaAPIWrapper
 from langchain.utilities import BashProcess, BingSearchAPIWrapper
+from langchain.tools.human.tool import HumanInputRun
 from langchain.agents import initialize_agent, Tool
 from langchain.agents import AgentType
 from langchain.chat_models import ChatOpenAI
 
-llm = ChatOpenAI(temperature=0.7)
-llm1 = ChatOpenAI(temperature=0)
+llm = ChatOpenAI(temperature=0)
+llm1 = OpenAI(temperature=0)
 search = SerpAPIWrapper()
 llm_math_chain = LLMMathChain(llm=llm1, verbose=True)
 wiki = WikipediaAPIWrapper()
 bash = BashProcess()
-bing = BingSearchAPIWrapper()
+bing = BingSearchAPIWrapper(k=3)
+human = HumanInputRun()
 
 tools = [
     Tool(
@@ -37,9 +39,14 @@ tools = [
         name="Bing",
         func=bing.run,
         description="useful for when you need to answer questions about current events. You can ask questions in natural language."
+    ),
+    Tool(
+        name="human",
+        func=human.run,
+        description="You can ask a human for guidance when you think you got stuck or you are not sure what to do next. The input should be a question for the human."
     )
 ]
 
 mrkl = initialize_agent(tools, llm, agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
 
-output =mrkl.run("今日の重要なニュースを教えてください。")
+output =mrkl.run("userの年齢はいくつですか？")
